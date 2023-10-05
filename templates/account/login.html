@@ -1,0 +1,73 @@
+{% extends '../base.html' %}
+{% load static %}
+{% block title %} Login {% endblock title %}
+
+{% block content %}
+
+    <!-- Page Add Section Begin -->
+    <section class="page-add">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-16">
+                    <div class="page-breadcrumb">
+                        <h2>Login to your account</h2>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    <!-- Page Add Section End -->
+
+    <!-- Contact Section Begin -->
+    <div class="contact-section">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-8">
+                    <form class="contact-form" novalidate method="POST">
+                        {% csrf_token %}
+                        <div class="row">
+                            {% if messages %}
+                            <div class="col-lg-12 py-2">
+                                {% include '../message.html' %}
+                            </div>
+                            {% endif %}
+                            <div class="col-lg-12 py-2">
+                                <input name="username" type="text" placeholder="Username or Email">
+                                {{form.username.errors}}
+                            </div>
+                            <div class="col-lg-12" py-2>
+                                <input name="password" type="password" placeholder="Password">
+                                {{form.password.errors}}
+                            </div>
+                            <div class="col-lg-12 my-2 text-right">
+                                <p>
+                                    Forget Password? 
+                                    <strong class="ml-2">
+                                        <a class="text-decoration-none text-dark" href="{% url 'password_reset' %}">
+                                            Reset
+                                        </a> here
+                                    </strong>
+                                </p>
+                            </div>
+                            <div class="col-lg-12 text-right">
+                                <button type="submit">Login</button>
+                            </div>
+                            <div class="col-lg-12 my-2 text-center">
+                                <p>
+                                    Don't have an account? 
+                                    <strong class="ml-2">
+                                        <a class="text-decoration-none text-dark" href="{% url 'registration' %}">
+                                            Sign up
+                                        </a> here
+                                    </strong>
+                                </p>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Contact Section End -->
+
+{% endblock content %}
