@@ -1,86 +1,77 @@
-{% extends '../base.html' %}
+{% extends 'base.html' %}
 {% load static %}
-{% block title %} Product Details {% endblock title %}
+{% block title %}{{ product.title }}{% endblock %}
 
 {% block content %}
+<nav aria-label="breadcrumb" class="mb-3">
+  <ol class="breadcrumb mb-0 small">
+    <li class="breadcrumb-item"><a href="{% url 'home' %}">Home</a></li>
+    <li class="breadcrumb-item"><a href="{% url 'product-list' %}">Products</a></li>
+    <li class="breadcrumb-item active">{{ product.title|truncatewords:5 }}</li>
+  </ol>
+</nav>
 
-    <!-- Product Page Section Beign -->
-    <section class="product-page">
-        <div class="container">
-            <div class="row">
-                <div class="col-lg-6">
-                    <div class="product-slider owl-carousel">
-                        <div style="width: 80%;" class="product-img">
-                            <figure>
-                                <img style="height: 380px;" src="{{product.thumbnail}}" alt="">
-                            </figure>
-                        </div>
-                    </div>
-                    
-                </div>
-                <div class="col-lg-6">
-                    <div class="product-content">
-                        <h2>{{product.title}}</h2>
-                        <div class="pc-meta">
-                            <h5>${{product.price}}</h5>
-                            <div class="rating">
-                                {% if product.in_stock %}
-                                <div class="p-status">
-                                    In Stock
-                                </div>
-                                {% else %}
-                                <div class="p-status">
-                                    Out of stock
-                                </div>
-                                {% endif %}
-                            </div>
-                        </div>
-                        <p>{{product.description}}</p>
-                        <ul class="tags">
-                            <li><span>Category :</span>{{product.category.title}}</li>
-                        </ul>
-                        {% if product.in_stock %}
-                        <form action="{% url 'add-to-cart' product.id %}" method="POST">
-                            {% csrf_token %}
-                            <button style="cursor: pointer;" type="submit" class="primary-btn pc-btn">Add to cart</button>
-                        </form>
-                        {% endif %}
-                    </div>
-                </div>
-            </div>
+<div class="row g-4">
+  <div class="col-md-5">
+    <div class="card">
+      <div class="card-body p-3">
+        {% if product.thumbnail %}
+        <img src="{{ product.thumbnail.url }}" class="img-fluid product-detail-img rounded w-100" alt="{{ product.title }}">
+        {% else %}
+        <div class="product-detail-img d-flex align-items-center justify-content-center bg-light rounded w-100">
+          <i class="bi bi-image text-muted" style="font-size: 4rem;"></i>
         </div>
-    </section>
-    <!-- Product Page Section End -->
+        {% endif %}
+      </div>
+    </div>
+  </div>
 
-    <!-- Related Product Section Begin -->
-    <section class="related-product spad">
-        <div class="container">
-            <div class="row">
-                <div class="col-lg-12 text-center">
-                    <div class="section-title">
-                        <h2>Related Products</h2>
-                    </div>
-                </div>
-            </div>
-            <div class="row">
-                {% for related_product in related_products %}
-                <div class="col-lg-3 col-sm-6">
-                    <div class="single-product-item">
-                        <figure>
-                            <a href="{% url 'product-details' related_product.slug %}"><img src="{{related_product.thumbnail}}" style="height:220px;" alt=""></a>
-                        </figure>
-                        <div class="product-text">
-                            <a href="{% url 'product-details' related_product.slug %}">
-                                <h6>{{related_product.title}}</h6>
-                            </a>
-                            <p>${{related_product.price}}</p>
-                        </div>
-                    </div>
-                </div>
-                {% endfor %}
-            </div>
+  <div class="col-md-7">
+    <div class="card h-100">
+      <div class="card-body">
+        <span class="badge bg-light text-dark category-badge mb-2">{{ product.category.title|title }}</span>
+        <h2 class="h4 mb-2">{{ product.title }}</h2>
+        
+        <div class="d-flex align-items-center gap-3 mb-3">
+          <span class="h3 text-primary mb-0">${{ product.price|floatformat:"2" }}</span>
+          {% if product.in_stock %}
+          <span class="badge bg-success">In Stock</span>
+          {% else %}
+          <span class="badge bg-danger">Out of Stock</span>
+          {% endif %}
         </div>
-    </section>
-    <!-- Related Product Section End -->
 
-{% endblock content %}
+        {% if product.description and product.description != 'N/A' %}
+        <div class="mb-3">
+          <h6 class="small text-muted mb-1">Description</h6>
+          <p class="mb-0 small">{{ product.description }}</p>
+        </div>
+        {% endif %}
+
+        {% if product.in_stock %}
+        <form action="{% url 'add-to-cart' product.id %}" method="post" class="d-flex gap-2">
+          {% csrf_token %}
+          <input type="number" name="quantity" value="1" min="1" class="form-control form-control-sm" style="width: 80px;">
+          <button type="submit" class="btn btn-primary flex-grow-1">
+            <i class="bi bi-bag-plus me-1"></i>Add to Cart
+          </button>
+        </form>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Related Products -->
+{% if related_products %}
+<hr class="my-4">
+<div class="mb-3">
+  <h5 class="mb-3">Related Products</h5>
+  <div class="row g-3">
+    {% for p in related_products %}
+    {% include 'product/_card.html' with product=p %}
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
+{% endblock %}

@@ -1,53 +1,40 @@
-{% extends '../base.html' %}
+{% extends 'base.html' %}
 {% load static %}
-
-{% block title %} Product Listing {% endblock title %}
+{% block title %}Products{% endblock %}
 
 {% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h2 class="h5 mb-0">All Products <span class="text-muted fw-normal">({{ paginator.count }})</span></h2>
+</div>
 
-    <!-- Page Add Section Begin -->
-    <section class="page-add">
-        <div class="container">
-            <div class="categories-controls">
-                <div class="row">
-                    <div class="col-lg-12">
-                        <div class="categories-filter">
-                            <div class="cf-right">
-                                <span>{{paginator.count}} Products</span>
-                                {% include '../pagination.html' %}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-    <!-- Page Add Section End -->
+<div class="row g-3 mb-3">
+  {% for product in object_list %}
+  {% include 'product/_card.html' with product=product %}
+  {% empty %}
+  <div class="col-12 text-center py-5">
+    <i class="bi bi-box-seam text-muted" style="font-size: 3rem;"></i>
+    <p class="mt-2 text-muted">No products found.</p>
+  </div>
+  {% endfor %}
+</div>
 
-    <!-- Categories Page Section Begin -->
-    <section class="categories-page spad">
-        <div class="container">
-            <div class="row">
-                {% for product in object_list %}
-                <div class="col-lg-3 col-md-6">
-                    <div class="single-product-item">
-                        <a href="{% url 'product-details' product.slug %}">
-                            <figure>
-                                <img style="height:220px;" src="{{product.thumbnail}}" alt="">
-                            </figure>
-                        </a>
-                        <div class="product-text">
-                            <a href="{% url 'product-details' product.slug %}">
-                                <h6>{{product.title|title}} </h6>
-                            </a>
-                            <p>${{product.price}}</p>
-                        </div>
-                    </div>
-                </div>
-                {% endfor %}
-            </div>
-        </div>
-    </section>
-    <!-- Categories Page Section End -->
-
-{% endblock content %}
+{% if paginator.num_pages > 1 %}
+<nav aria-label="Products pagination">
+  <ul class="pagination justify-content-center">
+    {% if page_obj.has_previous %}
+    <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a></li>
+    {% endif %}
+    {% for num in paginator.page_range %}
+    {% if page_obj.number == num %}
+    <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+    {% elif num > page_obj.number|add:"-3" and num < page_obj.number|add:"3" %}
+    <li class="page-item"><a class="page-link" href="?page={{ num }}">{{ num }}</a></li>
+    {% endif %}
+    {% endfor %}
+    {% if page_obj.has_next %}
+    <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a></li>
+    {% endif %}
+  </ul>
+</nav>
+{% endif %}
+{% endblock %}

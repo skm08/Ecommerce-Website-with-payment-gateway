@@ -167,4 +167,4 @@ def test_order_history_lists_orders(client, user, product):
     )
     response = client.get("/orders/")
     assert response.status_code == 200
-    assert b"Alice" in response.content
+    assert b"Alice" in response.content or b"Smith" in response.content

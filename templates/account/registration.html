@@ -1,65 +1,54 @@
 {% extends 'base.html' %}
 {% load static %}
-{% block title %} Registration {% endblock title %}
+{% block title %}Sign Up{% endblock %}
 
 {% block content %}
-    <section class="page-add">
-        <div class="container">
-            <div class="row">
-                <div class="col-lg-12">
-                    <div class="page-breadcrumb">
-                        <h2>Create your account</h2>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
+<div class="row justify-content-center">
+  <div class="col-md-5 col-lg-4">
+    <div class="card">
+      <div class="card-body p-4">
+        <h3 class="h5 mb-1">Create an account</h3>
+        <p class="text-muted small mb-4">Join us today</p>
 
-    <div class="contact-section">
-        <div class="container">
-            <div class="row">
-                <div class="col-lg-8">
-                    <form class="contact-form" novalidate method="POST">
-                        {% csrf_token %}
-                        <div class="row">
-                            {% if messages %}
-                            <div class="col-lg-12 py-2">
-                                {% include 'message.html' %}
-                            </div>
-                            {% endif %}
-                            <div class="col-lg-12 py-2">
-                                <input name="username" type="text" placeholder="Enter username" value="{{ form.username.value|default:'' }}">
-                                {% if form.username.errors %}<small class="text-danger">{{ form.username.errors|join:', ' }}</small>{% endif %}
-                            </div>
-                            <div class="col-lg-12 py-2">
-                                <input name="email" type="email" placeholder="Enter Email" value="{{ form.email.value|default:'' }}">
-                                {% if form.email.errors %}<small class="text-danger">{{ form.email.errors|join:', ' }}</small>{% endif %}
-                            </div>
-                            <div class="col-lg-12 py-2">
-                                <input name="password" type="password" placeholder="New Password">
-                                {% if form.password.errors %}<small class="text-danger">{{ form.password.errors|join:', ' }}</small>{% endif %}
-                            </div>
-                            <div class="col-lg-12 py-2">
-                                <input name="password2" type="password" placeholder="Confirm Password">
-                                {% if form.password2.errors %}<small class="text-danger">{{ form.password2.errors|join:', ' }}</small>{% endif %}
-                            </div>
-                            <div class="col-lg-12 text-right">
-                                <button type="submit">Register</button>
-                            </div>
-                            <div class="col-lg-12 my-2 text-center">
-                                <p>
-                                    Already have an account?
-                                    <strong class="ml-2">
-                                        <a class="text-decoration-none text-dark" href="{% url 'login' %}">
-                                            Login
-                                        </a> here
-                                    </strong>
-                                </p>
-                            </div>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
+        <form method="post" novalidate>
+          {% csrf_token %}
+          <div class="mb-3">
+            <label class="form-label small">Username</label>
+            <input name="username" type="text" class="form-control form-control-sm" required>
+            {% if form.username.errors %}
+            <div class="text-danger small mt-1">{{ form.username.errors }}</div>
+            {% endif %}
+          </div>
+          <div class="mb-3">
+            <label class="form-label small">Email</label>
+            <input name="email" type="email" class="form-control form-control-sm" required>
+            {% if form.email.errors %}
+            <div class="text-danger small mt-1">{{ form.email.errors }}</div>
+            {% endif %}
+          </div>
+          <div class="mb-3">
+            <label class="form-label small">Password</label>
+            <input name="password" type="password" class="form-control form-control-sm" required>
+            {% if form.password.errors %}
+            <div class="text-danger small mt-1">{{ form.password.errors }}</div>
+            {% endif %}
+          </div>
+          <div class="mb-3">
+            <label class="form-label small">Confirm Password</label>
+            <input name="password2" type="password" class="form-control form-control-sm" required>
+            {% if form.password2.errors %}
+            <div class="text-danger small mt-1">{{ form.password2.errors }}</div>
+            {% endif %}
+          </div>
+          <button type="submit" class="btn btn-primary w-100">Create Account</button>
+        </form>
+
+        <hr class="my-3">
+        <p class="text-center text-muted small mb-0">
+          Already have an account? <a href="{% url 'login' %}" class="text-decoration-none">Sign in</a>
+        </p>
+      </div>
     </div>
-{% endblock content %}
+  </div>
+</div>
+{% endblock %}

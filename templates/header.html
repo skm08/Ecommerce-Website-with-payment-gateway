@@ -1,48 +1,47 @@
 {% load static %}
-<header class="header-section">
-    <div class="container-fluid">
-        <div class="inner-header">
-            <div class="logo">
-                <a href="{% url 'home' %}"><img src="{% static 'img/logo.png' %}" alt=""></a>
-            </div>
-            <div class="header-right">
-                <img src="{% static 'img/icons/search.png' %}" alt="" class="search-trigger">
-                <a href="{% url 'cart' %}">
-                    <img src="{% static 'img/icons/bag.png' %}" alt="">
-                    <span>{{cart|length}}</span>
-                </a>
-            </div>
-            {% if not request.user.is_authenticated %}
-            <div class="user-access">
-                <a href="{% url 'login' %}">Register/Login </a>
-            </div>
-            {% endif %}
-            <nav class="main-menu mobile-menu">
-                <ul>
-                    <li><a class="" href="{% url 'home' %}">Home</a></li>
-                    <li><a class="" href="{% url 'product-list' %}">Products</a></li>
-                    <li><a href="#">Category</a>
-                        <ul class="sub-menu">
-                            {% for category in categories %}
-                            <li><a href="{% url 'category-details' category.slug %}">{{category.title|title}}</a></li>
-                            {% endfor %}
-                        </ul>
-                    </li>
-                    {% if request.user.is_authenticated %}
+<nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom shadow-sm sticky-top">
+  <div class="container">
+    <a class="navbar-brand d-flex align-items-center gap-2" href="{% url 'home' %}">
+      <i class="bi bi-bag-fill text-primary" style="font-size: 1.5rem;"></i>
+      <span>Shop</span>
+    </a>
 
-                    <li><a href="#"><img src="{% static 'img/icons/man.png' %}" alt=""></a>
-                        <ul class="sub-menu">
-                            
-                            <li><a href="{% url 'logout' %}">Logout</a></li>
-                            <li><a href="#">Orders</a></li>
-                            <li><a href="{% url 'change_password' %}">Change password</a></li>
-                            
-                        </ul>
-                    </li>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+      <span class="navbar-toggler-icon"></span>
+    </button>
 
-                    {% endif %}
-                </ul>
-            </nav>
+    <div class="collapse navbar-collapse" id="navbarNav">
+      <form class="d-flex flex-grow-1 mx-3 navbar-search" action="{% url 'search-products' %}" method="get">
+        <input name="key" type="search" class="form-control" placeholder="Search products..." value="{{ request.GET.key|default:'' }}">
+        <button class="btn btn-outline-primary ms-2" type="submit"><i class="bi bi-search"></i></button>
+      </form>
+
+      <div class="d-flex align-items-center gap-2">
+        <a href="{% url 'cart' %}" class="btn btn-outline-secondary position-relative" title="Cart">
+          <i class="bi bi-bag"></i>
+          {% if cart|length > 0 %}
+          <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">{{cart|length}}</span>
+          {% endif %}
+        </a>
+
+        {% if request.user.is_authenticated %}
+        <div class="dropdown">
+          <button class="btn btn-outline-secondary dropdown-toggle d-flex align-items-center gap-1" type="button" data-bs-toggle="dropdown">
+            <i class="bi bi-person"></i>
+            <span class="d-none d-sm-inline">{{ request.user.username }}</span>
+          </button>
+          <ul class="dropdown-menu dropdown-menu-end">
+            <li><a class="dropdown-item" href="{% url 'order-history' %}"><i class="bi bi-receipt me-2"></i>Orders</a></li>
+            <li><a class="dropdown-item" href="{% url 'change_password' %}"><i class="bi bi-key me-2"></i>Change Password</a></li>
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item text-danger" href="{% url 'logout' %}"><i class="bi bi-box-arrow-right me-2"></i>Logout</a></li>
+          </ul>
         </div>
+        {% else %}
+        <a href="{% url 'login' %}" class="btn btn-outline-primary">Login</a>
+        <a href="{% url 'registration' %}" class="btn btn-primary ms-1">Sign Up</a>
+        {% endif %}
+      </div>
     </div>
-</header> 
+  </div>
+</nav>

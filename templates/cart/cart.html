@@ -1,117 +1,116 @@
-{% extends '../base.html' %}
+{% extends 'base.html' %}
 {% load static %}
-{% block title %} Cart Items {% endblock title %}
+{% block title %}Shopping Cart{% endblock %}
 
 {% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h2 class="h5 mb-0">Shopping Cart {% if cart|length > 0 %}<span class="text-muted fw-normal">({{ cart|length }})</span>{% endif %}</h2>
+</div>
 
-    <!-- Page Add Section Begin -->
-    <section class="page-add cart-page-add">
-        <div class="container">
-            <div class="row">
-                <div class="col-lg-4">
-                    <div class="page-breadcrumb">
-                        {% if cart %}
-                        <h3>Cart: ({{cart|length}})</h3>
-                        {% endif %}
-                    </div>
+{% if cart %}
+<div class="card mb-3">
+  <div class="card-body p-0">
+    <div class="table-responsive">
+      <table class="table table-hover mb-0 cart-table">
+        <thead class="table-light">
+          <tr>
+            <th style="width: 40%;">Product</th>
+            <th style="width: 15%;">Price</th>
+            <th style="width: 20%;">Quantity</th>
+            <th style="width: 15%;">Subtotal</th>
+            <th style="width: 10%;"></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for item in cart %}
+          {% with product=item.product %}
+          <tr>
+            <td>
+              <div class="d-flex align-items-center gap-3">
+                {% if product.thumbnail %}
+                <img src="{{ product.thumbnail.url }}" class="product-img rounded" alt="{{ product.title }}">
+                {% else %}
+                <div class="product-img d-flex align-items-center justify-content-center bg-light rounded">
+                  <i class="bi bi-image text-muted"></i>
                 </div>
-            </div>
-        </div>
-    </section>
-    <!-- Page Add Section End -->
-
-    <!-- Cart Page Section Begin -->
-    {% if cart %}
-    <div class="cart-page">
-        <div class="container">
-            <div class="row py-2">
-                <div class="col-md-12">
-                    {% if messages %}
-                    {% include '../message.html' %}
-                    {% endif %}
+                {% endif %}
+                <div>
+                  <a href="{% url 'product-details' product.slug %}" class="text-decoration-none text-dark fw-medium small">{{ product.title|truncatewords:6 }}</a>
+                  <div class="text-muted small">{{ product.category.title|title }}</div>
                 </div>
-            </div>
-            <div class="cart-table">
-                <table>
-                    <thead>
-                        <tr>
-                            <th class="product-h">Product</th>
-                            <th>Price</th>
-                            <th class="quan">Quantity</th>
-                            <th>Sub-Total</th>
-                            <th></th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for item in cart %}
-                        {% with product=item.product %}
-                        <tr>
-                            <td class="product-col">
-                                <img style="height: 100px;" src="{{product.thumbnail}}" alt="">
-                                <div class="p-title">
-                                    <h5>{{product.title}}</h5>
-                                </div>
-                            </td>
-                            <td class="price-col">$ {{product.price|floatformat:"2"}}</td>
-                            <td class="quantity-col">
-                                <div class="pro-qty">
-                                    <a href="?product_id={{product.id}}&&quantity=-1">
-                                        <span class="dec qtybtn">-</span>
-                                    </a>
-                                    <input disabled type="text" value="{{item.quantity}}">
-                                    <a href="?product_id={{product.id}}&&quantity=1">
-                                        <span class="inc qtybtn">+</span>
-                                    </a>
-                                </div>
-                            </td>
-                            <td class="total">$ {{item.subtotal|floatformat:"2"}}</td>
-                            <td class="product-close">
-                                <a class="text-decoration-none text-dark" href="?product_id={{product.id}}&&quantity=-{{item.quantity}}">X</a>
-                            </td>
-                        </tr>
-                        {% endwith %}
-                        {% endfor %}
-                    </tbody>
-                </table>
-                <hr>
-                <h4 class="text-center">
-                    <strong>Total = </strong> $ {{cart.total|floatformat:"2"}}
-                </h4>
-            </div>
-            <div class="cart-btn">
-                <div class="row">
-                    <div class="col-lg-6">
-                        <form action="{% url 'add-coupon' %}" method="POST">
-                            {% csrf_token %}
-                            <div class="coupon-input">
-                                <input name="coupon" type="text" placeholder="Enter cupone code">
-                            </div>
-                        </form>
-                    </div>
-                    <div class="col-lg-5 offset-lg-1 text-left text-lg-right">
-                        <div class="site-btn clear-btn">
-                            <a class="text-decoration-none text-dark" href="?clear=true">
-                                Clear Cart
-                            </a>
-                        </div>
-                        <div class="site-btn clear-btn">
-                            <a class="text-decoration-none text-dark" href="{% url 'checkout' %}">
-                                Checkout
-                            </a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+              </div>
+            </td>
+            <td class="small">${{ product.price|floatformat:"2" }}</td>
+            <td>
+              <form action="{% url 'cart' %}" method="get" class="d-flex align-items-center gap-1">
+                <input type="hidden" name="product_id" value="{{ product.id }}">
+                <input type="number" name="quantity" value="{{ item.quantity }}" min="1" max="99" class="form-control form-control-sm text-center" style="width: 70px;">
+              </form>
+            </td>
+            <td class="fw-medium">${{ item.subtotal|floatformat:"2" }}</td>
+            <td>
+              <a href="{% url 'cart' %}?product_id={{ product.id }}&quantity=-{{ item.quantity }}" class="btn btn-sm btn-outline-danger" title="Remove">
+                <i class="bi bi-trash"></i>
+              </a>
+            </td>
+          </tr>
+          {% endwith %}
+          {% endfor %}
+        </tbody>
+      </table>
     </div>
-    {% else %}
+  </div>
+</div>
 
-    <div class="cart-page">
-        <div class="container">
-            {% include '../no-cart.html' %}
+<div class="card mb-3">
+  <div class="card-body">
+    <div class="row g-3">
+      <div class="col-md-6">
+        <form action="{% url 'add-coupon' %}" method="post" class="d-flex gap-2">
+          {% csrf_token %}
+          <input type="text" name="coupon" class="form-control form-control-sm" placeholder="Coupon code" style="max-width: 200px;">
+          <button type="submit" class="btn btn-sm btn-outline-primary">Apply</button>
+        </form>
+      </div>
+      <div class="col-md-6 text-md-end">
+        <div class="d-flex justify-content-md-end gap-2 flex-wrap">
+          <a href="{% url 'cart' %}?clear=true" class="btn btn-sm btn-outline-danger">Clear Cart</a>
+          <a href="{% url 'checkout' %}" class="btn btn-sm btn-primary">Checkout</a>
         </div>
+      </div>
     </div>
-    {% endif %}
-    <!-- Cart Page Section End -->
 
-{% endblock content %}
+    <hr class="my-3">
+    <div class="row">
+      <div class="col-md-6">
+        <div class="d-flex justify-content-between small">
+          <span class="text-muted">Subtotal</span>
+          <span>${{ cart.subtotal|floatformat:"2" }}</span>
+        </div>
+        {% if cart.coupon %}
+        <div class="d-flex justify-content-between small text-success">
+          <span>Coupon: {{ cart.coupon.code }} ({{ cart.coupon.discount }}% off)</span>
+          <span></span>
+        </div>
+        {% endif %}
+      </div>
+      <div class="col-md-6 text-md-end">
+        <div class="d-flex justify-content-md-end align-items-baseline gap-2">
+          <span class="text-muted small">Total</span>
+          <span class="h4 fw-bold text-primary mb-0">${{ cart.total|floatformat:"2" }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% else %}
+<div class="card text-center py-5">
+  <div class="card-body">
+    <i class="bi bi-bag text-muted" style="font-size: 3rem;"></i>
+    <h4 class="mt-3">Your cart is empty</h4>
+    <p class="text-muted">Looks like you haven't added any products yet.</p>
+    <a href="{% url 'product-list' %}" class="btn btn-primary mt-2">Continue Shopping</a>
+  </div>
+</div>
+{% endif %}
+{% endblock %}
