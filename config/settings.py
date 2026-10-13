@@ -8,28 +8,30 @@ https://docs.djangoproject.com/en/4.1/topics/settings/
 
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.1/ref/settings/
+
+Secrets (SECRET_KEY, PayPal credentials, email creds) are loaded from the
+git-ignored `.env` file via `django-environ`. Never hard-code them here.
 """
 
 from pathlib import Path
+import environ
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+# --- Environment ---------------------------------------------------------
+env = environ.Env(
+    DEBUG=(bool, True),
+)
+# Read .env next to manage.py / BASE_DIR. Missing file is fine in dev.
+environ.Env.read_env(BASE_DIR / ".env")
 
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/4.1/howto/deployment/checklist/
+# --- Core security -------------------------------------------------------
+SECRET_KEY = env("SECRET_KEY", default="django-insecure-change-me")
+DEBUG = env.bool("DEBUG", default=True)
+ALLOWED_HOSTS = env.list("ALLOWED_HOSTS", default=["*"])
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = "django-insecure-sh-25rs(3f@d&1h9@%+(=z$u$ea*pqg5k=q3h9z)6brsm3!jhs"
-
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
-
-ALLOWED_HOSTS = []
-
-
-# Application definition
-
+# --- Applications --------------------------------------------------------
 INSTALLED_APPS = [
     "django.contrib.admin",
     "django.contrib.auth",
@@ -37,6 +39,9 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "crispy_forms",
+    "crispy_bootstrap5",
+    "django_filters",
     "product",
     "user_account",
     "cart",
@@ -58,7 +63,7 @@ ROOT_URLCONF = "config.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [BASE_DIR / 'templates'],
+        "DIRS": [BASE_DIR / "templates"],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -75,80 +80,67 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "config.wsgi.application"
 
+# --- Database ------------------------------------------------------------
+# Defaults to SQLite; set DATABASE_URL=postgres://... to switch.
+DATABASES = {"default": env.db(default="sqlite:///" + str(BASE_DIR / "db.sqlite3"))}
 
-# Database
-# https://docs.djangoproject.com/en/4.1/ref/settings/#databases
-
-DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
-    }
-}
-
-
-# Password validation
-# https://docs.djangoproject.com/en/4.1/ref/settings/#auth-password-validators
-
-AUTH_PASSWORD_VALIDATORS = [
-    {
-        "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",
-    },
-    {
-        "NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",
-    },
-    {
-        "NAME": "django.contrib.auth.password_validation.CommonPasswordValidator",
-    },
-    {
-        "NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",
-    },
-]
-
-
-# Internationalization
-# https://docs.djangoproject.com/en/4.1/topics/i18n/
-
-LANGUAGE_CODE = "en-us"
-
-TIME_ZONE = "UTC"
-
-USE_I18N = True
-
-USE_TZ = True
-
-
-# Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/4.1/howto/static-files/
-
-STATIC_URL = "static/"
-MEDIA_URL= 'media/'
-STATICFILES_DIRS=[BASE_DIR / 'static',]
-MEDIA_ROOT=BASE_DIR / 'media'
-
-# Default primary key field type
-# https://docs.djangoproject.com/en/4.1/ref/settings/#default-auto-field
-
-DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
-
-AUTH_USER_MODEL='user_account.User'
-
-SESSION_COOKIE_AGE=86400
-CART_ID='cart'
-COUPON_ID="coupon"
+# --- Auth ----------------------------------------------------------------
+AUTH_USER_MODEL = "user_account.User"
 
 AUTHENTICATION_BACKENDS = (
-    'django.contrib.auth.backends.ModelBackend',
-    'user_account.backends.EmailAuthenticationBackend',
+    "django.contrib.auth.backends.ModelBackend",
+    "user_account.backends.EmailAuthenticationBackend",
 )
 
-EMAIL_BACKEND="django.core.mail.backends.smtp.EmailBackend"
-EMAIL_USE_TLS=True
-EMAIL_HOST="smtp.gmail.com"
-EMAIL_HOST_USER="dweep.plus@gmail.com"
-EMAIL_HOST_PASSWORD="refeemjcizwvbeqx"
-EMAIL_PORT=587
+# Password validation
+AUTH_PASSWORD_VALIDATORS = [
+    {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
+    {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator"},
+    {"NAME": "django.contrib.auth.password_validation.CommonPasswordValidator"},
+    {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
+]
 
-PAYPAL_CLIENT_ID = 'AfIOiNI_SQpBYHz7jnC7w3yWAfOxu_Y-Hr4AZvfieZj_EnVUv-lXzQhZ1H5ocorVa2BlqmjfRypJIHZ4'
-PAYPAL_SECRET_ID = 'EIKRdPgsI5ZGl9-rHOGi6KRaY4nbrMtHZce066ZeobFfmFPGzsdUik_TN08P0N9HzH1Ii5qAkOG2I7Tj'
+# --- Internationalization ------------------------------------------------
+LANGUAGE_CODE = "en-us"
+TIME_ZONE = "UTC"
+USE_I18N = True
+USE_TZ = True
 
+# --- Static / media ------------------------------------------------------
+STATIC_URL = "static/"
+STATIC_ROOT = BASE_DIR / "staticfiles"
+STATICFILES_DIRS = [BASE_DIR / "static"]
+MEDIA_URL = "media/"
+MEDIA_ROOT = BASE_DIR / "media"
+
+# Default primary key field type
+DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+# --- Sessions ------------------------------------------------------------
+SESSION_COOKIE_AGE = 86400  # 24 hours
+
+# --- Cart / coupon identifiers -------------------------------------------
+CART_ID = "cart"
+COUPON_ID = "coupon"
+
+# --- Email ---------------------------------------------------------------
+EMAIL_BACKEND = env("EMAIL_BACKEND", default="django.core.mail.backends.smtp.EmailBackend")
+EMAIL_USE_TLS = env.bool("EMAIL_USE_TLS", default=True)
+EMAIL_HOST = env("EMAIL_HOST", default="smtp.gmail.com")
+EMAIL_HOST_USER = env("EMAIL_HOST_USER", default="")
+EMAIL_HOST_PASSWORD = env("EMAIL_HOST_PASSWORD", default="")
+EMAIL_PORT = env.int("EMAIL_PORT", default=587)
+DEFAULT_FROM_EMAIL = env("DEFAULT_FROM_EMAIL", default=EMAIL_HOST_USER)
+
+# --- PayPal --------------------------------------------------------------
+PAYPAL_CLIENT_ID = env("PAYPAL_CLIENT_ID", default="")
+PAYPAL_SECRET_ID = env("PAYPAL_SECRET_ID", default="")
+PAYPAL_MODE = env("PAYPAL_MODE", default="sandbox")  # sandbox | live
+PAYPAL_WEBHOOK_ID = env("PAYPAL_WEBHOOK_ID", default="")
+
+# --- Frontend / absolute URLs --------------------------------------------
+FRONTEND_URL = env("FRONTEND_URL", default="http://localhost:8000")
+
+# --- Crispy forms --------------------------------------------------------
+CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
+CRISPY_TEMPLATE_PACK = "bootstrap5"

@@ -1,21 +1,16 @@
-{% extends '../base.html' %}
+{% extends 'base.html' %}
 {% load static %}
-
-{% block title %} {% endblock title %}
+{% block title %} Checkout {% endblock title %}
 
 {% block links %}
-
 <style>
     #paypal-button-container {
-        display: none;
+        min-height: 120px;
     }
 </style>
-
 {% endblock links %}
 
 {% block content %}
-
-    <!-- Page Add Section Begin -->
     <section class="page-add">
         <div class="container">
             <div class="row">
@@ -27,9 +22,7 @@
             </div>
         </div>
     </section>
-    <!-- Page Add Section End -->
 
-    <!-- Contact Section Begin -->
     <div class="contact-section">
         <div class="container">
             <div class="row">
@@ -40,7 +33,7 @@
                         <div class="row">
                             {% if messages %}
                             <div class="col-lg-6 py-6">
-                                {% include '../message.html' %}
+                                {% include 'message.html' %}
                             </div>
                             {% endif %}
                             <div class="col-lg-6 py-6">
@@ -67,8 +60,11 @@
                                 <input name="address" type="text" placeholder="Enter Shipping address">
                                 <small id="error_address" class="text-danger"></small>
                             </div>
+                            <div class="col-lg-6 py-6">
+                                <p class="mb-1"><strong>Cart total:</strong> $ {{ cart_total|floatformat:"2" }}</p>
+                            </div>
                             <div class="col-lg-6 text-right">
-                                <button type="submit">Pay Now</button>
+                                <button type="submit" class="primary-btn">Pay Now</button>
                             </div>
                         </div>
                     </form>
@@ -76,85 +72,80 @@
             </div>
         </div>
     </div>
-    <!-- Contact Section End -->
-
 {% endblock content %}
 
 {% block extra_scripts %}
-
-<script src="https://www.paypal.com/sdk/js?client-id=AfIOiNI_SQpBYHz7jnC7w3yWAfOxu_Y-Hr4AZvfieZj_EnVUv-lXzQhZ1H5ocorVa2BlqmjfRypJIHZ4&currency=USD"></script>
-
+<script src="https://www.paypal.com/sdk/js?client-id={{ paypal_client_id }}&currency=USD&intent=capture"></script>
 <script>
     const form = document.getElementById('checkout-form');
     const csrfmiddlewaretoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
-    let formIsValid = false;
 
-    const validateFormAndCheckout = () => {
-        const url = '/checkout/';
-        fetch(url, {
-            method:"POST",
-            headers: {
-                'X-CSRFToken': csrfmiddlewaretoken
-            },
-            body: new FormData(form)
-        })
-        .then(response => {
-            return response.json();
-        })
-        .then(data => {
-            if(data.success) {
-                formIsValid = true;
-                new FormData(form).forEach((value,key) => {
-                    if(key != 'csrfmiddlewaretoken') {
-                        document.getElementById(`error_${key}`).innerText = "";
-                    }
-                })
-                console.log('Successful');
-            } 
-            else {
-                let errors =data.errors;
-                formIsValid=false;
-                new FormData(form).forEach((value,key) => {
-                    if(key != 'csrfmiddlewaretoken') {
-                        document.getElementById(`error_${key}`).innerText = "";
-                    }
-                });
-                Object.keys(errors).forEach(key => {
-                    document.getElementById(`error_${key}`).innerText = errors[key].join('');
-                })
-                console.log('Unsuccessful');
+    const clearErrors = () => {
+        document.querySelectorAll('small[id^="error_"]').forEach(el => el.innerText = '');
+    };
+
+    const showErrors = (errors) => {
+        clearErrors();
+        Object.keys(errors || {}).forEach(key => {
+            const el = document.getElementById(`error_${key}`);
+            if (el) {
+                el.innerText = Array.isArray(errors[key]) ? errors[key].join(' ') : errors[key];
             }
-        })
-        .catch(error => {
-            console.log(error);
-        })
-    }
+        });
+    };
 
-    form.addEventListener('submit',(event) => {
-        event.preventDefault();
-        validateFormAndCheckout();
-    })
+    // Step 1: submit the form -> server creates the Order + PayPal order.
+    const createPayPalOrder = () => {
+        return fetch('{% url "checkout" %}', {
+            method: 'POST',
+            headers: { 'X-CSRFToken': csrfmiddlewaretoken, 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: new URLSearchParams(new FormData(form)).toString()
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                return data.paypal_order_id;
+            }
+            showErrors(data.errors);
+            throw new Error('Order creation failed');
+        });
+    };
+
+    // Step 2: PayPal approves -> server captures and marks the Order paid.
+    const onApprove = (data, actions) => {
+        return actions.order.capture().then(details => {
+            return fetch('{% url "checkout-capture" %}', {
+                method: 'POST',
+                headers: { 'X-CSRFToken': csrfmiddlewaretoken, 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: new URLSearchParams({ order_id: data.orderID }).toString()
+            })
+            .then(response => response.json())
+            .then(capture => {
+                alert('Transaction completed by ' + details.payer.name.given_name);
+                window.location.href = '{% url "order-history" %}';
+            })
+            .catch(err => {
+                console.error(err);
+                alert('Payment succeeded but capture failed. Contact support.');
+            });
+        });
+    };
 
     paypal.Buttons({
-        createOrder: (data,actions) => {
-            return actions.order.create({
-                purchase_units: [{
-                    amount: {
-                        value: '77.44'
-                    }
-                }]
-            });
-        },
-        onApprove: (data,actions) => {
-            return actions.order.capture().then(function(orderData){
-                console.log('Capture result', orderData, JSON.stringify(orderData, null,2));
-                const transaction = orderData.purchase_units[0].payments.capture[0];
-                alert(`Transaction ${transaction.status}: ${transaction.id}\n\nSee console for all details`);
-            });
+        createOrder: createPayPalOrder,
+        onApprove: onApprove,
+        onError: (err) => {
+            console.error(err);
+            alert('PayPal error, please try again.');
         }
     }).render('#paypal-button-container');
 
-
+    // Also allow the "Pay Now" button to kick off the flow.
+    form.addEventListener('submit', (event) => {
+        event.preventDefault();
+        createPayPalOrder().then(() => {
+            // PayPal buttons take over rendering; nothing else to do.
+        }).catch(() => {});
+    });
 </script>
-
 {% endblock extra_scripts %}

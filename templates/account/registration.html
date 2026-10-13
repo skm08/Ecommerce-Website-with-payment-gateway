@@ -1,14 +1,12 @@
-{% extends '../base.html' %}
+{% extends 'base.html' %}
 {% load static %}
 {% block title %} Registration {% endblock title %}
 
 {% block content %}
-
-    <!-- Page Add Section Begin -->
     <section class="page-add">
         <div class="container">
             <div class="row">
-                <div class="col-lg-16">
+                <div class="col-lg-12">
                     <div class="page-breadcrumb">
                         <h2>Create your account</h2>
                     </div>
@@ -16,9 +14,7 @@
             </div>
         </div>
     </section>
-    <!-- Page Add Section End -->
 
-    <!-- Contact Section Begin -->
     <div class="contact-section">
         <div class="container">
             <div class="row">
@@ -28,31 +24,31 @@
                         <div class="row">
                             {% if messages %}
                             <div class="col-lg-12 py-2">
-                                {% include '../message.html' %}
+                                {% include 'message.html' %}
                             </div>
                             {% endif %}
                             <div class="col-lg-12 py-2">
-                                <input name="username" type="text" placeholder="Enter username">
-                                {{form.username.errors}}
+                                <input name="username" type="text" placeholder="Enter username" value="{{ form.username.value|default:'' }}">
+                                {% if form.username.errors %}<small class="text-danger">{{ form.username.errors|join:', ' }}</small>{% endif %}
                             </div>
                             <div class="col-lg-12 py-2">
-                                <input name="email" type="email" placeholder="Enter Email">
-                                {{form.email.errors}}
+                                <input name="email" type="email" placeholder="Enter Email" value="{{ form.email.value|default:'' }}">
+                                {% if form.email.errors %}<small class="text-danger">{{ form.email.errors|join:', ' }}</small>{% endif %}
                             </div>
-                            <div class="col-lg-12" py-2>
+                            <div class="col-lg-12 py-2">
                                 <input name="password" type="password" placeholder="New Password">
-                                {{form.password.errors}}
+                                {% if form.password.errors %}<small class="text-danger">{{ form.password.errors|join:', ' }}</small>{% endif %}
                             </div>
-                            <div class="col-lg-12" py-2>
+                            <div class="col-lg-12 py-2">
                                 <input name="password2" type="password" placeholder="Confirm Password">
-                                {{form.password2.errors}}
+                                {% if form.password2.errors %}<small class="text-danger">{{ form.password2.errors|join:', ' }}</small>{% endif %}
                             </div>
                             <div class="col-lg-12 text-right">
                                 <button type="submit">Register</button>
                             </div>
                             <div class="col-lg-12 my-2 text-center">
                                 <p>
-                                    Already have an account? 
+                                    Already have an account?
                                     <strong class="ml-2">
                                         <a class="text-decoration-none text-dark" href="{% url 'login' %}">
                                             Login
@@ -66,6 +62,4 @@
             </div>
         </div>
     </div>
-    <!-- Contact Section End -->
-
 {% endblock content %}
